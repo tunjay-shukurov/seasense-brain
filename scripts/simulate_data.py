@@ -1,12 +1,16 @@
 import numpy as np
 import pandas as pd
-import os
+from pathlib import Path
 
-# === Klasörler ===
-os.makedirs("simulated_signals", exist_ok=True)
-os.makedirs("ai_exports", exist_ok=True)
+# === Directories ===
+data_dir = Path("data")
+sim_dir = Path(data_dir/ "raw_sac_data/simulated_signals")
+export_dir = Path(data_dir/ "processed_csv")
+data_dir.mkdir(exist_ok=True)
+sim_dir.mkdir(exist_ok=True)
+export_dir.mkdir(exist_ok=True)
 
-# === Özellik çıkarıcı ===
+# === Feature extractor ===
 def extract_features(signal, fs):
     n = len(signal)
     duration = n / fs
@@ -33,10 +37,10 @@ def extract_features(signal, fs):
         peak_freq, band_energy_1_5Hz, band_energy_5_10Hz
     ]
 
-# === Sinyal üretici ===
+# === Signal generator ===
 def generate_signal(duration=60, fs=100, label="noise"):
     t = np.linspace(0, duration, int(duration * fs))
-    signal = np.random.normal(0, 0.05, len(t))  # beyaz gürültü
+    signal = np.random.normal(0, 0.05, len(t))  # white noise
 
     if label == "earthquake":
         freq = np.random.uniform(1.0, 6.0)
@@ -50,7 +54,7 @@ def generate_signal(duration=60, fs=100, label="noise"):
 
     return t, signal, fs
 
-# === Ana kod ===
+# === Main code ===
 data = []
 num_per_class = 100
 labels = ["earthquake"] * num_per_class + ["noise"] * num_per_class
@@ -58,12 +62,13 @@ labels = ["earthquake"] * num_per_class + ["noise"] * num_per_class
 for i, label in enumerate(labels):
     t, signal, fs = generate_signal(label=label)
     filename = f"sim_{i}.csv"
-    np.savetxt(f"simulated_signals/{filename}", np.column_stack((t, signal)), delimiter=",", header="Time,Amplitude", comments='')
+    file_path = sim_dir / filename
+    np.savetxt(file_path, np.column_stack((t, signal)), delimiter=",", header="Time,Amplitude", comments='')
 
     features = extract_features(signal, fs)
     data.append(features + [filename, label])
 
-# === DataFrame ve CSV ===
+# === DataFrame and CSV ===
 columns = [
     "duration", "mean", "std", "max", "min", "rms",
     "kurtosis", "skewness", "zero_crossing_rate",
@@ -72,7 +77,7 @@ columns = [
 ]
 
 df = pd.DataFrame(data, columns=columns)
-df.to_csv("ai_exports/simulated_features.csv", index=False)
+df.to_csv(export_dir / "simulated_features.csv", index=False)
 
-print("✅ 200 sinyal üretildi (100 earthquake, 100 noise) ve özellikler çıkarıldı.")
-print("📁 Kaydedilen dosya: ai_exports/simulated_features.csv")
+print("✅ 200 signals generated (100 earthquake, 100 noise) and features extracted.")
+print(f"📁 Saved file: {export_dir / 'simulated_features.csv'}")

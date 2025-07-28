@@ -11,19 +11,23 @@ from pathlib import Path
 import joblib
 from datetime import datetime
 
-# === Klasörler ===
-export_dir = Path("ai_exports")
+# === Directories ===
+data_dir = Path("data")
+export_dir = data_dir / "processed_csv"
+log_dir = Path("logs")
 model_dir = Path("models")
+data_dir.mkdir(exist_ok=True)
 export_dir.mkdir(exist_ok=True)
+log_dir.mkdir(exist_ok=True)
 model_dir.mkdir(exist_ok=True)
 
-# === Dosya yolları ===
+# === File paths ===
 real_features_path = export_dir / "real_features_extracted.csv"
 simulated_features_path = export_dir / "simulated_features.csv"
-conf_matrix_path = export_dir / "conf_matrix.png"
-log_file = export_dir / "training_log.txt"
+conf_matrix_path = log_dir / "conf_matrix.png"
+log_file = log_dir / "training_log.txt"
 
-# === Log Fonksiyonu ===
+# === Logging Function ===
 def log_training_results(model_name, loss, accuracy, report_text, cm=None, cm_path=None, dataset_info="real+simulated"):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(log_file, "a") as f:
@@ -40,7 +44,7 @@ def log_training_results(model_name, loss, accuracy, report_text, cm=None, cm_pa
             f.write(f"\nConfusion Matrix Image: {cm_path}")
         f.write("\n\n")
 
-# === Değerlendirme ===
+# === Evaluation ===
 def evaluate_model(model, X_test, y_test, label_encoder, device, save_path=None):
     model.eval()
     with torch.no_grad():
@@ -70,7 +74,7 @@ def evaluate_model(model, X_test, y_test, label_encoder, device, save_path=None)
 
     return report, cm
 
-# === Veri Hazırlığı ===
+# === Data Preparation ===
 real_df = pd.read_csv(real_features_path)
 sim_df = pd.read_csv(simulated_features_path)
 combined_df = pd.concat([real_df, sim_df], ignore_index=True)
@@ -93,7 +97,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     X_scaled, y, test_size=0.2, random_state=42, stratify=y
 )
 
-# === PyTorch Dataset ve DataLoader ===
+# === PyTorch Dataset and DataLoader ===
 class FeatureDataset(torch.utils.data.Dataset):
     def __init__(self, features, labels):
         self.features = torch.tensor(features, dtype=torch.float32)
@@ -111,7 +115,7 @@ test_dataset = FeatureDataset(X_test, y_test)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=16, shuffle=True)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=16, shuffle=False)
 
-# === Model Tanımı ===
+# === Model Definition ===
 class ANN(nn.Module):
     def __init__(self, input_dim):
         super(ANN, self).__init__()
@@ -134,7 +138,7 @@ model = ANN(X_train.shape[1]).to(device)
 criterion = nn.BCELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-# === Eğitim Döngüsü ===
+# === Training Loop ===
 EPOCHS = 30
 
 for epoch in range(1, EPOCHS + 1):
@@ -151,7 +155,7 @@ for epoch in range(1, EPOCHS + 1):
 
     avg_train_loss = total_loss / len(train_loader)
 
-    # Validation hesaplama
+    # Validation
     model.eval()
     val_loss = 0
     correct = 0
@@ -171,7 +175,7 @@ for epoch in range(1, EPOCHS + 1):
 
     print(f"Epoch {epoch}/{EPOCHS} | Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f} | Val Acc: {val_acc:.4f}")
 
-# === Model Kaydetme ===
+# === Save Model ===
 timestamp = datetime.now().strftime("%Y%m%d_%H%M")
 acc_percent = int(val_acc * 100)
 model_name = f"sac_classifier_{timestamp}_acc{acc_percent}.pt"
@@ -179,13 +183,12 @@ model_path = model_dir / model_name
 torch.save(model.state_dict(), model_path)
 print(f"💾 Model saved: {model_path}")
 
-# latest_model.pt olarak güncelle
+# Update latest_model.pt
 latest_model_path = model_dir / "latest_model.pt"
 torch.save(model.state_dict(), latest_model_path)
 print(f"🗂️ Latest model updated: {latest_model_path}")
 
-# === Değerlendirme ve Loglama ===
-# Test verisini numpy dizisine çevir
+# === Evaluation and Logging ===
 X_test_tensor = torch.tensor(X_test, dtype=torch.float32).to(device)
 model.eval()
 with torch.no_grad():
@@ -203,4 +206,4 @@ log_training_results(
     dataset_info="real+simulated"
 )
 
-print("✅ Eğitim tamamlandı ve log dosyasına yazıldı.")
+print("✅ Training completed and results logged.")

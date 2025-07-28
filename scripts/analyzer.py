@@ -5,25 +5,25 @@ import matplotlib.pyplot as plt
 import numpy as np
 from obspy import read
 from scipy.signal import butter, filtfilt, spectrogram
-from pathlib import Path 
+from pathlib import Path
 import pandas as pd
 from feature_extractor import extract_features_from_signal
 from sklearn.preprocessing import LabelEncoder
 
-# Veri seti yükleme ve ön işleme
-df = pd.read_csv("ai_exports/real_features_extracted.csv")
+# Load and preprocess dataset
+df = pd.read_csv("data/processed_csv/real_features_extracted.csv")
 X = df.drop(columns=["label"])
 y = df["label"]
 le = LabelEncoder()
 y_encoded = le.fit_transform(y)
 
-# Global değişkenler
+# Global variables
 last_files = []
 last_fs = None
 last_nyquist = None
 current_signals = []
 
-# --- Yardımcı Fonksiyonlar ---
+# --- Helper Functions ---
 
 def read_sac_file(file_path):
     st = read(file_path)
@@ -71,7 +71,7 @@ def on_hover(event):
         x, y = event.xdata, event.ydata
         coord_label.config(text=f"x: {x:.2f}, y: {y:.2f}")
 
-# --- Ana Fonksiyonlar ---
+# --- Main Functions ---
 
 def reset_filter():
     if last_fs is None:
@@ -94,7 +94,7 @@ def analyze_sac_files(file_paths):
         fmin = float(entry_fmin.get())
         fmax = float(entry_fmax.get())
     except ValueError:
-        messagebox.showerror("Hata", "fmin ve fmax sayısal olmalı.")
+        messagebox.showerror("Error", "fmin and fmax must be numeric.")
         return
 
     for path in file_paths:
@@ -147,12 +147,12 @@ def browse_files():
     global last_files, last_fs, last_nyquist
     paths = filedialog.askopenfilenames(filetypes=[("SAC Files", "*.sac *.SAC")])
     if paths:
-        paths = [Path(p) for p in paths]  # pathlib objesine çevir
+        paths = [Path(p) for p in paths]
         y0, fs0, stats0 = read_sac_file(paths[0])
         for p in paths:
             _, fs, _ = read_sac_file(p)
             if fs != fs0:
-                messagebox.showerror("Hata", "Tüm dosyaların örnekleme frekansı aynı olmalı.")
+                messagebox.showerror("Error", "All files must have the same sampling rate.")
                 return
         last_files = paths
         last_fs = fs0
@@ -167,7 +167,7 @@ def browse_files():
 def export_features():
     global current_signals, last_fs
     if not current_signals:
-        messagebox.showerror("Hata", "Export edilecek sinyal yok.")
+        messagebox.showerror("Error", "No signal to export.")
         return
 
     features_list = []
@@ -182,31 +182,31 @@ def export_features():
     ]
     df_export = pd.DataFrame(features_list, columns=cols)
     df_export.to_csv("ai_exports/real_features_extracted.csv", index=False)
-    messagebox.showinfo("Bilgi", "Özellikler ai_exports/real_features_extracted.csv dosyasına kaydedildi.")
+    messagebox.showinfo("Info", "Features saved to ai_exports/real_features_extracted.csv.")
 
 def apply_filter():
     if not last_files:
-        messagebox.showerror("Hata", "Önce dosya seçmelisiniz.")
+        messagebox.showerror("Error", "Please select files first.")
         return
     try:
         float(entry_fmin.get())
         float(entry_fmax.get())
     except ValueError:
-        messagebox.showerror("Hata", "fmin ve fmax sayısal olmalı.")
+        messagebox.showerror("Error", "fmin and fmax must be numeric.")
         return
     analyze_sac_files(last_files)
 
-# --- GUI Kurulumu ---
+# --- GUI Setup ---
 
 root = tk.Tk()
-root.title("SAC Dosyası Analiz ve Filtreleme")
+root.title("SAC File Analysis and Filtering")
 root.configure(bg="#1e272e")
 root.geometry("1200x900")
 
 frame_controls = tk.Frame(root, bg="#2f3640")
 frame_controls.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
 
-btn_browse = tk.Button(frame_controls, text="Dosya Seç", command=browse_files)
+btn_browse = tk.Button(frame_controls, text="Select File(s)", command=browse_files)
 btn_browse.pack(side=tk.LEFT, padx=5)
 
 tk.Label(frame_controls, text="fmin (Hz):", bg="#2f3640", fg="white").pack(side=tk.LEFT)
@@ -217,16 +217,16 @@ tk.Label(frame_controls, text="fmax (Hz):", bg="#2f3640", fg="white").pack(side=
 entry_fmax = tk.Entry(frame_controls, width=6)
 entry_fmax.pack(side=tk.LEFT, padx=5)
 
-btn_apply_filter = tk.Button(frame_controls, text="Filtreleri Uygula", command=apply_filter)
+btn_apply_filter = tk.Button(frame_controls, text="Apply Filter", command=apply_filter)
 btn_apply_filter.pack(side=tk.LEFT, padx=5)
 
-btn_reset_filter = tk.Button(frame_controls, text="Filtreyi Sıfırla", command=reset_filter)
+btn_reset_filter = tk.Button(frame_controls, text="Reset Filter", command=reset_filter)
 btn_reset_filter.pack(side=tk.LEFT, padx=5)
 
-btn_export = tk.Button(frame_controls, text="Özellikleri Export Et", command=export_features)
+btn_export = tk.Button(frame_controls, text="Export Features", command=export_features)
 btn_export.pack(side=tk.LEFT, padx=5)
 
-metadata_label = tk.Label(root, text="Dosya Metadatası", bg="#2f3640", fg="white", justify=tk.LEFT)
+metadata_label = tk.Label(root, text="File Metadata", bg="#2f3640", fg="white", justify=tk.LEFT)
 metadata_label.pack(side=tk.TOP, fill=tk.X, padx=5)
 
 coord_label = tk.Label(root, text="x: -, y: -", bg="#1e272e", fg="white")

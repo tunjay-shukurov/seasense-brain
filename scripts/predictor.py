@@ -8,7 +8,7 @@ from tkinter import filedialog, messagebox
 from pathlib import Path
 from torch import nn
 
-# 📐 ANN model mimarisi
+# ANN model architecture
 class ANNModel(nn.Module):
     def __init__(self, input_dim):
         super(ANNModel, self).__init__()
@@ -25,7 +25,7 @@ class ANNModel(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-# 📊 Özellik çıkarımı
+# Feature extraction
 def extract_features_from_signal(data, fs):
     n = len(data)
     duration = n / fs
@@ -50,26 +50,26 @@ def extract_features_from_signal(data, fs):
         peak_freq, band_energy_1_5Hz, band_energy_5_10Hz
     ]
 
-# 🚀 Ana tahmin fonksiyonu
+# Main prediction function
 def main():
     root = tk.Tk()
     root.withdraw()
-    folder_path = filedialog.askdirectory(title="Tahmin için SAC klasörü seçin")
+    folder_path = filedialog.askdirectory(title="Select SAC folder for prediction")
     if not folder_path:
-        messagebox.showinfo("Bilgi", "Klasör seçilmedi.")
+        messagebox.showinfo("Info", "No folder selected.")
         return
 
     folder_path = Path(folder_path)
     sac_files = [f for f in folder_path.rglob("*") if f.is_file() and f.suffix.lower() == ".sac"]
     if not sac_files:
-        messagebox.showerror("Hata", "Klasörde .sac dosyası bulunamadı.")
+        messagebox.showerror("Error", "No .sac files found in the folder.")
         return
 
-    # 📦 Scaler ve input boyutu
+    # Load scaler and input dimension
     scaler = joblib.load("models/scaler.pkl")
     input_dim = scaler.mean_.shape[0]
 
-    # 📦 Model tanımı ve ağırlıkları yükleme
+    # Define model and load weights
     model = ANNModel(input_dim)
     state_dict = torch.load("models/latest_model.pt", map_location="cpu")
     model.load_state_dict(state_dict)
@@ -98,10 +98,10 @@ def main():
         })
 
     df = pd.DataFrame(predictions)
-    save_path = Path("ai_exports/prediction_results.csv")
+    save_path = Path("logs/prediction_results.csv")
     df.to_csv(save_path, index=False)
 
-    messagebox.showinfo("Tamamlandı", f"Tahmin tamamlandı.\n→ {save_path}")
+    messagebox.showinfo("Completed", f"Prediction completed.\n→ {save_path}")
     print(df)
 
 if __name__ == "__main__":

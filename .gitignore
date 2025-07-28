@@ -18,9 +18,8 @@ env_pt/
 .ipynb_checkpoints/
 
 # Logs
-*.log
-*.txt
-*.png
+logs/ *.txt
+logs/ *.png
 
 # Mac & Linux
 .DS_Store
