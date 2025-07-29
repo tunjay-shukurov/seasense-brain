@@ -93,15 +93,19 @@ pip install -r requirements.txt
 python scripts/data_harvester.py
 ```
 ```bash
-#5. Create synthetic data:
+#5 Transform .SAC files to .CSV files:
+python scripts/batch_extract_real.py
+```
+```bash
+#6. Create synthetic data:
 python scripts/simulate_data.py
 ```
 ```bash
-#6. Train the model:
+#7. Train the model:
 python scripts/train_ann.py
 ```
 ```bash
-#7. Predict using a trained model:
+#8. Predict using a trained model:
 python scripts/predictor.py
 ```
 ---
