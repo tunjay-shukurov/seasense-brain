@@ -17,7 +17,7 @@
 - [ ] Improve Remaining Scripts
     - Apply same standards to other scripts (`predictor.py`, `simulate_data.py`, etc.).
 
-- [ ] Write `mkdir.py` for Documentation Structure
+- [x] Write `mkdir.py` for Documentation Structure
     - Automatically create standard folders for organizing documentation and outputs.
 
 - [ ] Create `main.py` as Central Pipeline
