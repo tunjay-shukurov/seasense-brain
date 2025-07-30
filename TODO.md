@@ -2,7 +2,7 @@
 - [x] Upgrade `README.md`
     - improve documentation and explain project goals, setup, and usage clearly.
 
-- [ ] Refactor All Scripts
+- [x] Refactor All Scripts
     - Make the code more readable, modular, and efficient.
 
 - [ ] Make All Scripts Functional
