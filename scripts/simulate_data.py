@@ -6,9 +6,6 @@ from pathlib import Path
 data_dir = Path("data")
 sim_dir = Path(data_dir/ "raw_sac_data/simulated_signals")
 export_dir = Path(data_dir/ "processed_csv")
-data_dir.mkdir(exist_ok=True)
-sim_dir.mkdir(exist_ok=True)
-export_dir.mkdir(exist_ok=True)
 
 # === Feature extractor ===
 def extract_features(signal, fs):

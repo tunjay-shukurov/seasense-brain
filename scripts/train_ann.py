@@ -16,10 +16,6 @@ data_dir = Path("data")
 export_dir = data_dir / "processed_csv"
 log_dir = Path("logs")
 model_dir = Path("models")
-data_dir.mkdir(exist_ok=True)
-export_dir.mkdir(exist_ok=True)
-log_dir.mkdir(exist_ok=True)
-model_dir.mkdir(exist_ok=True)
 
 # === File paths ===
 real_features_path = export_dir / "real_features_extracted.csv"
